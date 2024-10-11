@@ -23,9 +23,9 @@ func (ui uiClock) JawsGetHtml(e *jaws.Element) template.HTML {
 		}(e.Jaws)
 	})
 	now := time.Now().Round(time.Second)
-	fmt := "15:04 MST"
+	fmt := "15:04&nbsp;MST"
 	if (now.Second() % 2) == 0 {
-		fmt = "15&nbsp;04 MST"
+		fmt = "15&nbsp;04&nbsp;MST"
 	}
 	return template.HTML(now.Format(fmt)) // #nosec G203
 }
