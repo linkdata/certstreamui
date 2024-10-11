@@ -6,21 +6,16 @@ import (
 
 type uiCertStreamURL struct {
 	*Settings
-	jaws.UiString
+	jaws.String
 }
 
-func (ui uiCertStreamURL) JawsSetString(e *jaws.Element, val string) (err error) {
-	if err = ui.UiString.JawsSetString(e, val); err == nil {
-		err = ui.Save()
-	}
-	return
+func (ui *uiCertStreamURL) JawsClick(e *jaws.Element, name string) error {
+	return ui.SetCertStreamURL(ui.String.Get())
 }
 
-func (s *Settings) UiCertStreamURL() jaws.StringSetter {
-	return uiCertStreamURL{
+func (s *Settings) UiCertStreamURL() jaws.ClickHandler {
+	return &uiCertStreamURL{
 		Settings: s,
-		UiString: jaws.UiString{
-			L: &s.mu,
-			P: &s.CertStreamURL,
-		}}
+		String:   jaws.String{Value: s.GetCertStreamURL()},
+	}
 }
