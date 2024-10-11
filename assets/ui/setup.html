@@ -8,7 +8,7 @@
 
 <form autocomplete="off">
 	<div class="input-group mb-3">
-		{{with .Settings.UiCertStreamURL}}
+		{{with .UiCertStreamURL}}
 			<span class="input-group-text">certstream-server-go URL</span>
 			{{$.Text . `class="form-control"`}}
 			{{$.Button "Apply" . `class="btn btn-outline-secondary"`}}

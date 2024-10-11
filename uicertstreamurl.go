@@ -1,21 +1,27 @@
 package certstreamui
 
 import (
+	"strings"
+
 	"github.com/linkdata/jaws"
 )
 
 type uiCertStreamURL struct {
-	*Settings
+	*CertStreamUI
 	jaws.String
 }
 
-func (ui *uiCertStreamURL) JawsClick(e *jaws.Element, name string) error {
-	return ui.SetCertStreamURL(ui.String.Get())
+func (ui *uiCertStreamURL) JawsClick(e *jaws.Element, name string) (err error) {
+	urlStr := strings.TrimSpace(ui.String.Get())
+	if err = ui.Settings.SetCertStreamURL(urlStr); err == nil {
+		// establish connection
+	}
+	return
 }
 
-func (s *Settings) UiCertStreamURL() jaws.ClickHandler {
+func (csui *CertStreamUI) UiCertStreamURL() jaws.ClickHandler {
 	return &uiCertStreamURL{
-		Settings: s,
-		String:   jaws.String{Value: s.GetCertStreamURL()},
+		CertStreamUI: csui,
+		String:       jaws.String{Value: csui.Settings.GetCertStreamURL()},
 	}
 }
