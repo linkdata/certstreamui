@@ -10,7 +10,7 @@ import (
 )
 
 type Settings struct {
-	Filename      string
+	filename      string
 	mu            deadlock.RWMutex // protects following
 	CertStreamURL string
 }
@@ -20,7 +20,7 @@ func (s *Settings) Load() (err error) {
 	defer s.mu.Unlock()
 	s.CertStreamURL = "http://localhost:8081"
 	var b []byte
-	if b, err = os.ReadFile(s.Filename); err == nil {
+	if b, err = os.ReadFile(s.filename); err == nil {
 		err = json.Unmarshal(b, s)
 	} else if errors.Is(err, os.ErrNotExist) {
 		err = nil
@@ -31,7 +31,7 @@ func (s *Settings) Load() (err error) {
 func (s *Settings) saveLocked() (err error) {
 	var b []byte
 	if b, err = json.MarshalIndent(s, "", "  "); err == nil {
-		err = os.WriteFile(s.Filename, b, 0640)
+		err = os.WriteFile(s.filename, b, 0640)
 	}
 	return
 }

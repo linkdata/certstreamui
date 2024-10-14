@@ -54,7 +54,7 @@ func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStre
 						PkgVersion: PkgVersion,
 					}
 					csui.AddRoutes(mux)
-					csui.Settings.Filename = path.Join(csui.Config.DataDir, "settings.json")
+					csui.Settings.filename = path.Join(csui.Config.DataDir, "settings.json")
 					err = csui.Settings.Load()
 				}
 			}
