@@ -9,6 +9,7 @@ import (
 
 	"embed"
 
+	"github.com/linkdata/deadlock"
 	"github.com/linkdata/jaws"
 	"github.com/linkdata/jaws/staticserve"
 	"github.com/linkdata/webserv"
@@ -26,6 +27,8 @@ type CertStreamUI struct {
 	PkgName    string
 	PkgVersion string
 	Settings   Settings
+	mu         deadlock.RWMutex // protects following
+	domainCh   <-chan string
 }
 
 func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStreamUI, err error) {
