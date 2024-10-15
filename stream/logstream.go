@@ -3,7 +3,6 @@ package stream
 import (
 	"context"
 	"fmt"
-	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -40,7 +39,7 @@ func (ls *LogStream) String() string {
 	return fmt.Sprintf("%s:%s", ls.OperatorName, ls.LogSourceName)
 }
 
-func InitLogStream(operatorURI, operatorName string, batchSize, nWorkers, skipToIndex int, verbose bool) (*LogStream, error) {
+func InitLogStream(operatorURI, operatorName string, batchSize, nWorkers, startIndex int) (*LogStream, error) {
 	logClient, err := client.New(
 		operatorURI,
 		&http.Client{
@@ -66,8 +65,7 @@ func InitLogStream(operatorURI, operatorName string, batchSize, nWorkers, skipTo
 		OperatorName:  operatorName,
 		LogSourceName: certificate.GetSourceName(logClient.BaseURI()),
 		BatchSize:     batchSize,
-		IndexStart:    int64(skipToIndex),
-		Verbose:       verbose,
+		IndexStart:    int64(startIndex),
 		NWorkers:      nWorkers,
 	}
 	return ls, nil
@@ -208,7 +206,7 @@ func (ls *LogStream) fetchBatches(ctx context.Context) <-chan BatchIndex {
 				end = ls.IndexEnd
 			}
 			// Generate a batch and put it on the channel
-			batchEnd := start + int64(math.Min(float64(end-start), float64((ls.BatchSize))))
+			batchEnd := start + min(end-start, int64(ls.BatchSize))
 			batch := BatchIndex{Start: start, End: batchEnd - 1}
 			select {
 			case batches <- batch:
