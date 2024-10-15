@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/linkdata/certstreamui"
+	"github.com/linkdata/certstreamui/stream"
 	"github.com/linkdata/deadlock"
 	"github.com/linkdata/jaws"
 	"github.com/linkdata/webserv"
@@ -22,6 +23,17 @@ var (
 	flagListenURL = flag.String("listenurl", os.Getenv("WEBSERV_LISTENURL"), "manually specify URL where clients can reach us")
 	flagVersion   = flag.Bool("v", false, "display version")
 )
+
+func testStream() {
+	ch, err := stream.Stream(context.Background(), []stream.Operator{stream.ALL}, []stream.LogStatus{stream.Usable}, -1, 256, 1)
+	if err != nil {
+		slog.Error("e", "err", err)
+		return
+	}
+	for b := range ch {
+		fmt.Printf("%s %d\n", b.LogSourceName, len(b.Logs))
+	}
+}
 
 func main() {
 	flag.Parse()
