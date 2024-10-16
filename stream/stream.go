@@ -4,13 +4,14 @@ import (
 	"context"
 	"sync"
 
+	"github.com/google/certificate-transparency-go/loglist3"
 	"github.com/linkdata/certstreamui/certificate/v1"
 )
 
 func Stream(
 	ctx context.Context,
 	logOps []Operator,
-	logSts []LogStatus,
+	logSts []loglist3.LogStatus,
 	startIndex, batchSize, nWorkers int,
 ) (certCh <-chan *certificate.Batch, err error) {
 	// Initialize the operators

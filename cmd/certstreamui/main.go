@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/google/certificate-transparency-go/loglist3"
 	"github.com/linkdata/certstreamui"
 	"github.com/linkdata/certstreamui/stream"
 	"github.com/linkdata/deadlock"
@@ -25,7 +26,7 @@ var (
 )
 
 func testStream() {
-	ch, err := stream.Stream(context.Background(), []stream.Operator{stream.ALL}, []stream.LogStatus{stream.Usable}, -1, 256, 1)
+	ch, err := stream.Stream(context.Background(), []stream.Operator{stream.ALL}, []loglist3.LogStatus{loglist3.UsableLogStatus}, -1, 256, 1)
 	if err != nil {
 		slog.Error("e", "err", err)
 		return

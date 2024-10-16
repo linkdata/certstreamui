@@ -158,16 +158,10 @@ type LogOperator struct {
 // multiple log streams (HTTPS endpoints) where the operator puts certificate logs.
 // This function will initialize all the non-retired and non-rejected log streams
 // for the given operator.
-func (lo *LogOperator) InitStreams(statuses []LogStatus, mbatchSize, nWorkers, startIndex int) {
-	var useStatuses []loglist3.LogStatus
-	for _, st := range statuses {
-		llSt := logStatusToLLStatusMap[st]
-		useStatuses = append(useStatuses, llSt)
-	}
+func (lo *LogOperator) InitStreams(statuses []loglist3.LogStatus, mbatchSize, nWorkers, startIndex int) {
 	var logStreams []*LogStream
 	for _, ll := range lo.Operator.Logs {
-		status := ll.State.LogStatus()
-		if slices.Contains(useStatuses, status) {
+		if slices.Contains(statuses, ll.State.LogStatus()) {
 			ls, err := InitLogStream(ll.URL, lo.Name, mbatchSize, nWorkers, startIndex)
 			if err != nil {
 				klog.Errorf("error log-source=%s: %v", ll.URL, err)
