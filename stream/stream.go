@@ -8,7 +8,7 @@ import (
 	"github.com/linkdata/certstreamui/certificate/v1"
 )
 
-func Stream(
+func RunStream(
 	ctx context.Context,
 	logOps []Operator,
 	logSts []loglist3.LogStatus,

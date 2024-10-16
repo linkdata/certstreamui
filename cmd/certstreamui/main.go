@@ -26,7 +26,7 @@ var (
 )
 
 func testStream() {
-	ch, err := stream.Stream(context.Background(), []stream.Operator{stream.ALL}, []loglist3.LogStatus{loglist3.UsableLogStatus}, -1, 256, 1)
+	ch, err := stream.RunStream(context.Background(), []stream.Operator{stream.ALL}, []loglist3.LogStatus{loglist3.UsableLogStatus}, -1, 256, 1)
 	if err != nil {
 		slog.Error("e", "err", err)
 		return
