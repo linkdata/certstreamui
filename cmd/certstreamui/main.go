@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/linkdata/certstream"
 	"github.com/linkdata/certstreamui"
@@ -25,23 +24,8 @@ var (
 	flagVersion   = flag.Bool("v", false, "display version")
 )
 
-func testStream() {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	ch, err := certstream.New().Start(ctx, nil)
-	if err != nil {
-		slog.Error("e", "err", err)
-		return
-	}
-	for le := range ch {
-		fmt.Printf("%s %v\n", le.OperatorDomain, le.DNSNames())
-	}
-}
-
 func main() {
 	flag.Parse()
-
-	testStream()
 
 	if *flagVersion {
 		fmt.Println(certstreamui.PkgVersion)
@@ -68,11 +52,16 @@ func main() {
 	l, err := cfg.Listen()
 	if err == nil {
 		defer l.Close()
-		var csui *certstreamui.CertStreamUI
-		if csui, err = certstreamui.New(cfg, http.DefaultServeMux, jw); err == nil {
-			defer csui.Close()
-			if err = cfg.Serve(context.Background(), l, http.DefaultServeMux); err == nil {
-				return
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		var entryCh <-chan *certstream.LogEntry
+		if entryCh, err = certstream.New().Start(ctx, nil); err == nil {
+			var csui *certstreamui.CertStreamUI
+			if csui, err = certstreamui.New(cfg, http.DefaultServeMux, jw, entryCh); err == nil {
+				defer csui.Close()
+				if err = cfg.Serve(ctx, l, http.DefaultServeMux); err == nil {
+					return
+				}
 			}
 		}
 	}

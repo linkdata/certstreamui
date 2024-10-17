@@ -6,9 +6,11 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync/atomic"
 
 	"embed"
 
+	"github.com/linkdata/certstream"
 	"github.com/linkdata/deadlock"
 	"github.com/linkdata/jaws"
 	"github.com/linkdata/jaws/staticserve"
@@ -21,17 +23,18 @@ var assetsFS embed.FS
 //go:generate go run github.com/cparta/makeversion/v2/cmd/mkver@latest -name CertStreamUI -out version.gen.go
 
 type CertStreamUI struct {
-	Config     *webserv.Config
-	Jaws       *jaws.Jaws
-	FaviconURI string
-	PkgName    string
-	PkgVersion string
-	Settings   Settings
-	mu         deadlock.RWMutex // protects following
-	domainCh   <-chan string
+	Config      *webserv.Config
+	Jaws        *jaws.Jaws
+	FaviconURI  string
+	PkgName     string
+	PkgVersion  string
+	Settings    Settings
+	DomainCount uint64
+	mu          deadlock.RWMutex // protects following
+	domainCh    <-chan string
 }
 
-func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStreamUI, err error) {
+func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws, entryCh <-chan *certstream.LogEntry) (csui *CertStreamUI, err error) {
 	var tmpl *template.Template
 	var faviconuri string
 	if err = os.MkdirAll(cfg.DataDir, 0750); err == nil {
@@ -59,11 +62,18 @@ func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStre
 					csui.AddRoutes(mux)
 					csui.Settings.filename = path.Join(csui.Config.DataDir, "settings.json")
 					err = csui.Settings.Load()
+					go csui.readLogEntries(entryCh)
 				}
 			}
 		}
 	}
 	return
+}
+
+func (csui *CertStreamUI) readLogEntries(entryCh <-chan *certstream.LogEntry) {
+	for le := range entryCh {
+		atomic.AddUint64(&csui.DomainCount, uint64(len(le.DNSNames())))
+	}
 }
 
 func (csui *CertStreamUI) AddRoutes(mux *http.ServeMux) {
