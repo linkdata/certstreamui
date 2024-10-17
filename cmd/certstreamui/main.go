@@ -55,7 +55,9 @@ func main() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		var entryCh <-chan *certstream.LogEntry
-		if entryCh, err = certstream.New().Start(ctx, nil); err == nil {
+		cs := certstream.New()
+		if entryCh, err = cs.Start(ctx, nil); err == nil {
+			slog.Info("certstream", "operators", cs.Operators)
 			var csui *certstreamui.CertStreamUI
 			if csui, err = certstreamui.New(cfg, http.DefaultServeMux, jw, entryCh); err == nil {
 				defer csui.Close()

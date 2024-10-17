@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/coder/websocket v1.8.12
-	github.com/linkdata/certstream v0.0.1
+	github.com/linkdata/certstream v0.0.2
 	github.com/linkdata/deadlock v0.5.2
 	github.com/linkdata/jaws v0.79.0
 	github.com/linkdata/webserv v0.9.7
