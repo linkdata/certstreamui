@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
-	"github.com/google/certificate-transparency-go/loglist3"
+	"github.com/linkdata/certstream"
 	"github.com/linkdata/certstreamui"
-	"github.com/linkdata/certstreamui/stream"
 	"github.com/linkdata/deadlock"
 	"github.com/linkdata/jaws"
 	"github.com/linkdata/webserv"
@@ -26,18 +26,22 @@ var (
 )
 
 func testStream() {
-	ch, err := stream.RunStream(context.Background(), []stream.Operator{stream.ALL}, []loglist3.LogStatus{loglist3.UsableLogStatus}, -1, 256, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	ch, err := certstream.New().Start(ctx, nil)
 	if err != nil {
 		slog.Error("e", "err", err)
 		return
 	}
-	for b := range ch {
-		fmt.Printf("%s %d\n", b.LogSourceName, len(b.Logs))
+	for le := range ch {
+		fmt.Printf("%s %v\n", le.OperatorDomain, le.DNSNames())
 	}
 }
 
 func main() {
 	flag.Parse()
+
+	testStream()
 
 	if *flagVersion {
 		fmt.Println(certstreamui.PkgVersion)
