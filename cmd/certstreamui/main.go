@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/linkdata/certstream"
 	"github.com/linkdata/certstreamui"
 	"github.com/linkdata/deadlock"
 	"github.com/linkdata/jaws"
@@ -54,16 +53,12 @@ func main() {
 		defer l.Close()
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		var entryCh <-chan *certstream.LogEntry
-		cs := certstream.New()
-		if entryCh, err = cs.Start(ctx, nil); err == nil {
-			slog.Info("certstream", "operators", cs.Operators)
-			var csui *certstreamui.CertStreamUI
-			if csui, err = certstreamui.New(cfg, http.DefaultServeMux, jw, entryCh); err == nil {
-				defer csui.Close()
-				if err = cfg.Serve(ctx, l, http.DefaultServeMux); err == nil {
-					return
-				}
+		var csui *certstreamui.CertStreamUI
+		if csui, err = certstreamui.New(cfg, http.DefaultServeMux, jw); err == nil {
+			defer csui.Close()
+			go csui.Run(ctx)
+			if err = cfg.Serve(ctx, l, http.DefaultServeMux); err == nil {
+				return
 			}
 		}
 	}

@@ -10,8 +10,8 @@ github.com/google/trillian v1.6.0 h1:jMBeDBIkINFvS2n6oV5maDqfRlxREAc6CW9QYWQ0qT4
 github.com/google/trillian v1.6.0/go.mod h1:Yu3nIMITzNhhMJEHjAtp6xKiu+H/iHu2Oq5FjV2mCWI=
 github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
-github.com/linkdata/certstream v0.0.2 h1:7zFIqczhHL+GHuJ24juAprKLtN5FywGCVPedN1p4hXc=
-github.com/linkdata/certstream v0.0.2/go.mod h1:J3uY62gHG+bAIy7425MmBZQmW/M+rPImUyaDcjnfOso=
+github.com/linkdata/certstream v0.0.3 h1:7kIBKiOCAEP1+z5GhDv/Pk+CSdpFFlT+Ekflp3RttTc=
+github.com/linkdata/certstream v0.0.3/go.mod h1:J3uY62gHG+bAIy7425MmBZQmW/M+rPImUyaDcjnfOso=
 github.com/linkdata/deadlock v0.5.2 h1:clEEeRsMJCrEm5SuBI3v2l3sdCSP74p0ii+C1rR9nA0=
 github.com/linkdata/deadlock v0.5.2/go.mod h1:M3Td2tmYASdLm6xblKGlFvfu8SI+nPjrB7mDeFDEz/k=
 github.com/linkdata/jaws v0.79.0 h1:Shx6zTLqXXlzhf8Xu8tROfMVBP/qLzUaqIjVFpt3KYc=
