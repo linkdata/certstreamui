@@ -6,5 +6,17 @@
 </head>
 {{template "body_start.html" $}}
 
+<table class="table table-hover text-nowrap">
+	<thead>
+		<tr>
+			<th scope="col">Operator</th>
+			<th scope="col">Stream</th>
+			<th scope="col">Index</th>
+			<th scope="col">DNSNames</th>
+		</tr>
+	</thead>
+	{{$.Tbody .UiLogEntries}}
+</table>
+
 {{template "body_end.html" $}}
 {{end}}</html>

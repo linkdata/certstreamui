@@ -1,6 +1,7 @@
 package certstreamui
 
 import (
+	"container/ring"
 	"context"
 	"fmt"
 	"html/template"
@@ -38,7 +39,7 @@ type CertStreamUI struct {
 	mu          deadlock.RWMutex // protects following
 	running     int              // number of running streams
 	stopped     int              // number of stopped streams
-	entryCh     <-chan *certstream.LogEntry
+	ring        *ring.Ring
 }
 
 func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStreamUI, err error) {
@@ -65,6 +66,7 @@ func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStre
 						FaviconURI: faviconuri,
 						PkgName:    PkgName,
 						PkgVersion: PkgVersion,
+						ring:       ring.New(100),
 					}
 					csui.AddRoutes(mux)
 					csui.Settings.filename = path.Join(csui.Config.DataDir, "settings.json")
@@ -79,23 +81,27 @@ func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStre
 func (csui *CertStreamUI) Run(ctx context.Context) {
 	destCh := make(chan *certstream.LogEntry, 256)
 	defer close(destCh)
-	csui.mu.Lock()
-	csui.entryCh = destCh
-	csui.mu.Unlock()
-	go csui.process(destCh)
+	go csui.process(ctx, destCh)
 	for ctx.Err() == nil {
 		csui.readLogEntries(ctx, destCh)
 	}
 }
 
-func (csui *CertStreamUI) process(destCh <-chan *certstream.LogEntry) {
+func (csui *CertStreamUI) process(_ context.Context, destCh <-chan *certstream.LogEntry) {
 	for le := range destCh {
 		atomic.AddUint64(&csui.DomainCount, uint64(len(le.DNSNames())))
+		csui.mu.Lock()
+		csui.ring = csui.ring.Prev()
+		csui.ring.Value = le
+		csui.mu.Unlock()
+		csui.Jaws.Dirty(csui.UiLogEntries())
 	}
 }
 
 func (csui *CertStreamUI) readLogEntries(ctx context.Context, destCh chan<- *certstream.LogEntry) {
 	cs := certstream.New()
+	cs.BatchSize = 32
+	cs.ParallelFetch = 4
 	ctx, cancel := context.WithTimeout(ctx, time.Hour*24)
 	defer cancel()
 	if entryCh, err := cs.Start(ctx, nil); err == nil {
