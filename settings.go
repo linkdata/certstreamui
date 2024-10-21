@@ -3,7 +3,6 @@ package certstreamui
 import (
 	"encoding/json"
 	"errors"
-	"net/url"
 	"os"
 
 	"github.com/linkdata/deadlock"
@@ -42,7 +41,7 @@ func (s *Settings) Save() (err error) {
 	return s.saveLocked()
 }
 
-func (s *Settings) SetCertStreamURL(val string) (err error) {
+/*func (s *Settings) SetCertStreamURL(val string) (err error) {
 	var u *url.URL
 	if u, err = url.Parse(val); err == nil {
 		s.mu.Lock()
@@ -57,4 +56,4 @@ func (s *Settings) GetCertStreamURL() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.CertStreamURL
-}
+}*/

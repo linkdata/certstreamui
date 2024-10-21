@@ -1,7 +1,6 @@
 package certstreamui
 
 import (
-	"container/ring"
 	"context"
 	"fmt"
 	"html/template"
@@ -37,9 +36,7 @@ type CertStreamUI struct {
 	Settings    Settings
 	DomainCount uint64
 	mu          deadlock.RWMutex // protects following
-	running     int              // number of running streams
-	stopped     int              // number of stopped streams
-	ring        *ring.Ring
+	cs          *certstream.CertStream
 }
 
 func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStreamUI, err error) {
@@ -66,7 +63,6 @@ func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStre
 						FaviconURI: faviconuri,
 						PkgName:    PkgName,
 						PkgVersion: PkgVersion,
-						ring:       ring.New(100),
 					}
 					csui.AddRoutes(mux)
 					csui.Settings.filename = path.Join(csui.Config.DataDir, "settings.json")
@@ -78,23 +74,35 @@ func New(cfg *webserv.Config, mux *http.ServeMux, jw *jaws.Jaws) (csui *CertStre
 	return
 }
 
+func (csui *CertStreamUI) CertStream() (cs *certstream.CertStream) {
+	csui.mu.RLock()
+	cs = csui.cs
+	csui.mu.RUnlock()
+	return
+}
+
 func (csui *CertStreamUI) Run(ctx context.Context) {
 	destCh := make(chan *certstream.LogEntry, 256)
 	defer close(destCh)
 	go csui.process(ctx, destCh)
-	for ctx.Err() == nil {
+	for {
 		csui.readLogEntries(ctx, destCh)
+		if ctx.Err() != nil {
+			break
+		}
+		time.Sleep(time.Second * 10)
 	}
 }
 
 func (csui *CertStreamUI) process(_ context.Context, destCh <-chan *certstream.LogEntry) {
+	when := time.Now()
 	for le := range destCh {
-		atomic.AddUint64(&csui.DomainCount, uint64(len(le.DNSNames())))
-		csui.mu.Lock()
-		csui.ring = csui.ring.Prev()
-		csui.ring.Value = le
-		csui.mu.Unlock()
-		csui.Jaws.Dirty(csui.UiLogEntries())
+		count := int64(len(le.DNSNames()))
+		atomic.AddUint64(&csui.DomainCount, uint64(count))
+		if since := time.Since(when); since >= time.Second {
+			when = when.Add(since)
+			csui.Jaws.Dirty(csui.UiLogEntries())
+		}
 	}
 }
 
@@ -113,13 +121,15 @@ func (csui *CertStreamUI) readLogEntries(ctx context.Context, destCh chan<- *cer
 		slog.Info("certstream", "operators", operators)
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
+		csui.mu.Lock()
+		csui.cs = cs
+		csui.mu.Unlock()
 		for {
 			select {
 			case <-ticker.C:
-				csui.mu.Lock()
-				csui.running, csui.stopped = cs.CountStreams()
-				stopped := csui.stopped
-				csui.mu.Unlock()
+				csui.mu.RLock()
+				_, stopped := cs.CountStreams()
+				csui.mu.RUnlock()
 				if stopped > 1 {
 					return
 				}
@@ -132,9 +142,7 @@ func (csui *CertStreamUI) readLogEntries(ctx context.Context, destCh chan<- *cer
 		}
 	} else {
 		slog.Error("certstream.Start()", "err", err)
-		time.Sleep(time.Minute)
 	}
-	return
 }
 
 func (csui *CertStreamUI) AddRoutes(mux *http.ServeMux) {

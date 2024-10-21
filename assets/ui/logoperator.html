@@ -1,0 +1,11 @@
+{{with .Dot}}
+<details id="{{$.Jid}}">
+	<summary class="row">
+	<span class="col">{{.Name}}</span>
+	<span class="col">{{.Count}}</span>
+	</summary>
+{{range .Streams}}
+{{$.Template "logstream.html" .}}
+{{end}}
+</details>
+{{end}}

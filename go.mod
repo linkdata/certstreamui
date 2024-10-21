@@ -3,14 +3,14 @@ module github.com/linkdata/certstreamui
 go 1.23.2
 
 require (
-	github.com/coder/websocket v1.8.12
-	github.com/linkdata/certstream v0.0.3
+	github.com/linkdata/certstream v0.0.4
 	github.com/linkdata/deadlock v0.5.2
 	github.com/linkdata/jaws v0.79.0
 	github.com/linkdata/webserv v0.9.7
 )
 
 require (
+	github.com/coder/websocket v1.8.12 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/google/certificate-transparency-go v1.2.1 // indirect
 	github.com/google/trillian v1.6.0 // indirect

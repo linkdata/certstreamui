@@ -41,8 +41,9 @@ func main() {
 	if *flagCpuprofile != "" {
 		if f, err := os.Create(*flagCpuprofile); err == nil {
 			defer f.Close()
-			pprof.StartCPUProfile(f)
-			defer pprof.StopCPUProfile()
+			if err = pprof.StartCPUProfile(f); err == nil {
+				defer pprof.StopCPUProfile()
+			}
 		}
 	}
 
@@ -81,10 +82,11 @@ func main() {
 			go csui.Run(ctx)
 			if err = cfg.Serve(ctx, l, http.DefaultServeMux); err == nil {
 				if *flagMemprofile != "" {
-					if f, err := os.Create(*flagMemprofile); err == nil {
+					var f *os.File
+					if f, err = os.Create(*flagMemprofile); err == nil {
 						defer f.Close()
 						runtime.GC()
-						err = pprof.WriteHeapProfile(f)
+						_ = pprof.WriteHeapProfile(f)
 					}
 				}
 				return
