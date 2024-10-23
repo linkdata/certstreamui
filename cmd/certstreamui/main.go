@@ -69,23 +69,6 @@ func main() {
 		slog.Info("pprof listening on http://localhost:6060/debug/pprof/")
 	}
 
-	if *flagDbAddr != "" {
-		dsn := fmt.Sprintf("postgres://%s:%s@%s/%s", *flagDbUser, *flagDbPass, *flagDbAddr, *flagDbName)
-		db, err := sql.Open("pgx", dsn)
-		if err == nil {
-			if err = db.Ping(); err == nil {
-				var cdb *certdb.Certdb
-				if cdb, err = certdb.New(context.Background(), db); err == nil {
-					cdb.Close()
-				}
-			}
-			db.Close()
-		}
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
 	cfg := &webserv.Config{
 		Address:              *flagAddress,
 		CertDir:              *flagCertDir,
@@ -108,6 +91,24 @@ func main() {
 		defer l.Close()
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
+
+		if *flagDbAddr != "" {
+			dsn := fmt.Sprintf("postgres://%s:%s@%s/%s", *flagDbUser, *flagDbPass, *flagDbAddr, *flagDbName)
+			db, err := sql.Open("pgx", dsn)
+			if err == nil {
+				if err = db.Ping(); err == nil {
+					var cdb *certdb.Certdb
+					if cdb, err = certdb.New(ctx, db); err == nil {
+						cdb.Close()
+					}
+				}
+				db.Close()
+			}
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
 		var csui *certstreamui.CertStreamUI
 		if csui, err = certstreamui.New(cfg, http.DefaultServeMux, jw); err == nil {
 			defer csui.Close()
